@@ -7,18 +7,25 @@ function Matches() {
     const [matches, setMatches] = useState([]);
 
     useEffect(() => {
-        getFixtures()
+
+        getFixtures({
+            leagueId: 140,
+            season: 2025,
+            page: 1,
+            size: 10
+        })
             .then((res) => {
-                console.log(res.data);
                 setMatches(res.data.data.records);
             })
             .catch((err) => {
                 console.error(err);
             });
+
     }, []);
 
     return (
         <div>
+
             <h1>Matches</h1>
 
             {matches.map((match) => (
