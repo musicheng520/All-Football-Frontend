@@ -24,24 +24,28 @@ function MatchDetail() {
         return <div>Loading...</div>;
     }
 
+    const fixture = match.fixture;
+    const homeTeam = match.homeTeam;
+    const awayTeam = match.awayTeam;
+
     return (
         <div>
 
             <h1>Match Detail</h1>
 
             <h2>
-                Team {match.homeTeamId} vs Team {match.awayTeamId}
+                {homeTeam.name} vs {awayTeam.name}
             </h2>
 
             <p>
-                Score: {match.homeScore ?? "-"} : {match.awayScore ?? "-"}
+                Score: {fixture.homeScore ?? "-"} : {fixture.awayScore ?? "-"}
             </p>
 
-            <p>Status: {match.status}</p>
+            <p>Status: {fixture.status}</p>
 
-            <p>Venue: {match.venue}</p>
+            <p>Venue: {fixture.venue}</p>
 
-            <p>Referee: {match.referee ?? "Unknown"}</p>
+            <p>Referee: {fixture.referee ?? "Unknown"}</p>
 
         </div>
     );
