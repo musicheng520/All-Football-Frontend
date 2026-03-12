@@ -9,6 +9,9 @@ import News from "../pages/News";
 import MatchDetail from "../pages/MatchDetail";
 import TeamDetail from "../pages/TeamDetail";
 import PlayerDetail from "../pages/PlayerDetail";
+import Login from "../pages/Login";
+import Register from "../pages/Register";
+import Profile from "../pages/Profile";
 
 
 const router = createBrowserRouter([
@@ -33,6 +36,18 @@ const router = createBrowserRouter([
             {
                 path:"/players/:id",
                 element:<PlayerDetail />
+            },
+            {
+                path: "/login",
+                element: <Login />
+            },
+            {
+                path: "/register",
+                element: <Register />
+            },
+            {
+                path: "/profile",
+                element: <Profile />
             }
         ]
     }
