@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Box, TextField, Button, Typography } from "@mui/material";
-import { createComment } from "../../api/commentApi";
+import { createComment } from "../../api/comment";
 
 const CommentForm = ({ newsId }) => {
 

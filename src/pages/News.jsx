@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Container, Grid, Typography } from "@mui/material";
-import { getNewsList } from "../api/newsApi";
+import { getNewsList } from "../api/news";
 import NewsCard from "../components/news/NewsCard";
 
 function News() {
