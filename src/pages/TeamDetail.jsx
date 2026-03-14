@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
-import { useParams , Link} from "react-router-dom";
+import { useParams , Link, useNavigate } from "react-router-dom";
 import { getTeamDetail } from "../api/teams";
+import { followTeam, unfollowTeam } from "../api/follow";
 
 function TeamDetail() {
 
     const { id } = useParams();
 
+    const navigate = useNavigate();
+
     const [team, setTeam] = useState(null);
     const [squad, setSquad] = useState([]);
     const [fixtures, setFixtures] = useState([]);
+    const [following, setFollowing] = useState(false);
 
     useEffect(() => {
 
@@ -28,6 +32,35 @@ function TeamDetail() {
 
     }, [id]);
 
+    const handleFollow = async () => {
+
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+            navigate("/login");
+            return;
+        }
+
+        try {
+
+            if (following) {
+
+                await unfollowTeam(id);
+                setFollowing(false);
+
+            } else {
+
+                await followTeam(id);
+                setFollowing(true);
+
+            }
+
+        } catch (err) {
+            console.error(err);
+        }
+
+    };
+
     if (!team) {
         return <div>Loading...</div>;
     }
@@ -42,6 +75,10 @@ function TeamDetail() {
             <p>Country: {team.country}</p>
             <p>Founded: {team.founded}</p>
             <p>Venue: {team.venueName}</p>
+
+            <button onClick={handleFollow}>
+                {following ? "Following" : "Follow"}
+            </button>
 
             <h2>Squad</h2>
 

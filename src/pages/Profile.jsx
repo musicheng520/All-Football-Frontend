@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { getProfile } from "../api/auth";
+import { getMyFollows } from "../api/follow";
 
 function Profile() {
 
     const [user, setUser] = useState(null);
+    const [teams, setTeams] = useState([]);
 
     useEffect(() => {
 
@@ -12,7 +14,6 @@ function Profile() {
             try {
 
                 const res = await getProfile();
-
                 setUser(res.data.data);
 
             } catch (err) {
@@ -22,7 +23,22 @@ function Profile() {
             }
         };
 
+        const fetchFollows = async () => {
+
+            try {
+
+                const res = await getMyFollows();
+                setTeams(res.data.data);
+
+            } catch (err) {
+
+                console.error(err);
+
+            }
+        };
+
         fetchUser();
+        fetchFollows();
 
     }, []);
 
@@ -39,6 +55,18 @@ function Profile() {
             <p>ID: {user.id}</p>
             <p>Username: {user.username}</p>
             <p>Role: {user.role}</p>
+
+            <h2>Followed Teams</h2>
+
+            {teams.length === 0 && (
+                <p>No followed teams.</p>
+            )}
+
+            {teams.map(team => (
+                <div key={team.id}>
+                    {team.name}
+                </div>
+            ))}
 
         </div>
     );
