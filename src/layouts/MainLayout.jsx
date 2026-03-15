@@ -1,5 +1,5 @@
 import { Link, Outlet, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
     AppBar,
@@ -12,21 +12,42 @@ import {
 
 import SearchIcon from "@mui/icons-material/Search";
 
+import request from "../utils/request";   // 你的 axios 封装
+
 function MainLayout() {
 
     const navigate = useNavigate();
 
-    const token = localStorage.getItem("token");
-
     const [query, setQuery] = useState("");
+
+    const [token, setToken] = useState(localStorage.getItem("token"));
+
+    useEffect(() => {
+
+        if (token) {
+
+            request.get("/users/me")
+                .catch(() => {
+
+                    localStorage.removeItem("token");
+
+                    setToken(null);
+
+                    navigate("/login");
+
+                });
+
+        }
+
+    }, [token, navigate]);
 
     const handleLogout = () => {
 
         localStorage.removeItem("token");
 
-        navigate("/");
+        setToken(null);
 
-        window.location.reload();
+        navigate("/");
 
     };
 
