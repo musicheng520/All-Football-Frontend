@@ -6,7 +6,6 @@ const request = axios.create({
 });
 
 request.interceptors.request.use((config) => {
-
     const token = localStorage.getItem("token");
 
     if (token) {
@@ -18,18 +17,12 @@ request.interceptors.request.use((config) => {
 
 request.interceptors.response.use(
     (response) => {
-
         return response;
-
     },
     (error) => {
-
         if (error.response && error.response.status === 401) {
-
             localStorage.removeItem("token");
-
             window.location.href = "/login";
-
         }
 
         return Promise.reject(error);
