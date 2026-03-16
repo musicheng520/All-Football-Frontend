@@ -5,6 +5,8 @@ import { Tabs, Tab, Select, MenuItem, Pagination } from "@mui/material";
 
 import { getTeamDetail } from "../api/teams";
 import { followTeam, unfollowTeam } from "../api/follow";
+import { getNewsByTeam } from "../api/news";
+
 
 function TeamDetail() {
 
@@ -14,16 +16,19 @@ function TeamDetail() {
     const [team, setTeam] = useState(null);
     const [squad, setSquad] = useState([]);
     const [fixtures, setFixtures] = useState([]);
+    const [news, setNews] = useState([]);
 
     const [following, setFollowing] = useState(false);
 
     const [tab, setTab] = useState(0);
     const [season, setSeason] = useState(2025);
 
-    // pagination
     const [page, setPage] = useState(1);
     const pageSize = 6;
 
+
+
+    // TEAM DETAIL
     useEffect(() => {
 
         getTeamDetail(id, season)
@@ -41,6 +46,23 @@ function TeamDetail() {
             });
 
     }, [id, season]);
+
+
+
+    // TEAM NEWS
+    useEffect(() => {
+
+        getNewsByTeam(id)
+            .then(res => {
+
+                setNews(res.data.data || []);
+
+            })
+            .catch(err => {
+                console.error(err);
+            });
+
+    }, [id]);
 
 
 
@@ -81,10 +103,9 @@ function TeamDetail() {
 
 
 
-    // pagination logic
+    // pagination
     const start = (page - 1) * pageSize;
     const end = start + pageSize;
-
     const currentMatches = fixtures.slice(start, end);
 
 
@@ -170,7 +191,30 @@ function TeamDetail() {
 
                     <h2>Team News</h2>
 
-                    <p>No news implemented yet.</p>
+                    {news.length === 0 && <p>No news available.</p>}
+
+                    {news.map(n => (
+
+                        <div
+                            key={n.id}
+                            style={{
+                                marginBottom: 18,
+                                borderBottom: "1px solid #eee",
+                                paddingBottom: 10
+                            }}
+                        >
+
+                            <Link to={`/news/${n.id}`}>
+                                <h4 style={{ margin: 0 }}>{n.title}</h4>
+                            </Link>
+
+                            <div style={{ fontSize: 13, color: "#666" }}>
+                                {n.publishedAt}
+                            </div>
+
+                        </div>
+
+                    ))}
 
                 </div>
 
@@ -263,31 +307,21 @@ function TeamDetail() {
                                     }}
                                 >
 
-                                    {/* home */}
-
                                     <Link to={`/teams/${match.homeTeamId}`}>
-                                        <img
-                                            src={match.homeTeamLogo}
-                                            width="26"
-                                        />
+                                        <img src={match.homeTeamLogo} width="26" />
                                     </Link>
 
                                     {match.homeTeamName}
-
 
                                     <b style={{ margin: "0 10px" }}>
                                         {match.homeScore ?? "-"} :
                                         {match.awayScore ?? "-"}
                                     </b>
 
-
                                     {match.awayTeamName}
 
                                     <Link to={`/teams/${match.awayTeamId}`}>
-                                        <img
-                                            src={match.awayTeamLogo}
-                                            width="26"
-                                        />
+                                        <img src={match.awayTeamLogo} width="26" />
                                     </Link>
 
                                 </div>
@@ -309,8 +343,6 @@ function TeamDetail() {
                     })}
 
 
-
-                    {/* Pagination */}
 
                     <Pagination
                         count={Math.ceil(fixtures.length / pageSize)}
