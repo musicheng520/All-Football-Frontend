@@ -1,47 +1,52 @@
-// components/layout/FollowBar.jsx
-
-import { Box, Avatar, IconButton } from "@mui/material";
+import { Box } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 
-export default function FollowBar({
-                                      teams,
-                                      currentTeam,
-                                      onSelect,
-                                      onAdd
-                                  }) {
-    return (
-        <Box sx={{ display: "flex", gap: 2, mb: 4 }}>
+export default function FollowBar({ teams, currentTeam, onSelect, onAdd }) {
 
-            {teams.map(t => (
-                <Avatar
-                    key={t.id}
-                    src={t.logo}
-                    onClick={() => onSelect(t)}
+    return (
+        <Box sx={{
+            display: "flex",
+            gap: 2,
+            mb: 3,
+            overflowX: "auto"
+        }}>
+            {teams.map(team => (
+                <Box
+                    key={team.id}
+                    onClick={() => onSelect(team)}
                     sx={{
-                        width: 52,
-                        height: 52,
+                        width: 50,
+                        height: 50,
+                        borderRadius: "50%",
+                        background: currentTeam?.id === team.id ? "#dcedc8" : "#fff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                         cursor: "pointer",
-                        border:
-                            currentTeam?.id === t.id
-                                ? "3px solid #BFF332"
-                                : "2px solid transparent",
+                        transition: "0.2s",
                         "&:hover": { transform: "scale(1.1)" }
                     }}
-                />
+                >
+                    <img src={team.logo} style={{ width: "70%" }} />
+                </Box>
             ))}
 
-            {/* 🔥 ADD BUTTON */}
-            <IconButton
+            {/* ➕ */}
+            <Box
                 onClick={onAdd}
                 sx={{
-                    width: 52,
-                    height: 52,
+                    width: 50,
+                    height: 50,
                     borderRadius: "50%",
-                    background: "#F3F3F3"
+                    border: "2px dashed #ccc",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer"
                 }}
             >
                 <AddIcon />
-            </IconButton>
+            </Box>
 
         </Box>
     );

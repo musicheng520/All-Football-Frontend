@@ -36,7 +36,7 @@ function TeamSelectorDrawer({ open, onClose, onSelect }) {
             leagueId,
             season: 2025,
             page,
-            size: 10
+            size: 22
         })
             .then(res => {
                 setTeams(res.data.data.records);

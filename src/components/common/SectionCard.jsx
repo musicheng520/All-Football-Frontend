@@ -1,16 +1,13 @@
 import { Box } from "@mui/material";
 
-export default function SectionCard({ children, sx }) {
+export default function SectionCard({ children }) {
     return (
-        <Box
-            sx={{
-                background: "#fff",
-                borderRadius: "20px",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
-                p: 3,
-                ...sx
-            }}
-        >
+        <Box sx={{
+            p: 2,
+            borderRadius: 3,
+            background: "#fff",
+            boxShadow: "0 6px 18px rgba(0,0,0,0.05)"
+        }}>
             {children}
         </Box>
     );
