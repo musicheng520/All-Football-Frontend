@@ -1,27 +1,36 @@
-import { useEffect, useState } from "react";
-import { Box, Select, MenuItem } from "@mui/material";
+import { useEffect, useMemo, useState } from "react";
+import {
+    Box,
+    Select,
+    MenuItem,
+    Typography,
+    Avatar,
+    Pagination
+} from "@mui/material";
 import { useSearchParams } from "react-router-dom";
 
 import NavTabs from "../components/common/NavTabs";
 import SectionCard from "../components/common/SectionCard";
 import TeamHero from "../components/layout/TeamHero";
 import FollowBar from "../components/layout/FollowBar";
-
 import NewsCard from "../components/cards/NewsCard";
 import MatchCard from "../components/cards/MatchCard";
 import PlayerCard from "../components/cards/PlayerCard";
+import TeamSelectorDrawer from "../components/team/TeamSelectorDrawer";
 import OverviewCard from "../components/cards/OverviewCard";
 
-import TeamSelectorDrawer from "../components/team/TeamSelectorDrawer";
-
-import { getMyFollows } from "../api/follow";
+import { getMyFollows, followTeam, unfollowTeam } from "../api/follow";
 import { getTeamDetail } from "../api/teams";
 import { getNewsByTeam } from "../api/news";
+
+import SportsSoccerIcon from "@mui/icons-material/SportsSoccer";
+import SecurityIcon from "@mui/icons-material/Security";
+import HubIcon from "@mui/icons-material/Hub";
+import ShieldIcon from "@mui/icons-material/Shield";
 
 const TABS = ["Overview", "News", "Players", "Matches"];
 
 export default function TeamPage() {
-
     const [searchParams, setSearchParams] = useSearchParams();
     const season = parseInt(searchParams.get("season")) || 2025;
 
@@ -36,20 +45,35 @@ export default function TeamPage() {
     const [tab, setTab] = useState(0);
     const [openDrawer, setOpenDrawer] = useState(false);
 
-    // ⭐ 分页
-    const [page, setPage] = useState(1);
-    const pageSize = 6;
+    const [matchPage, setMatchPage] = useState(1);
+    const matchPageSize = 6;
 
-    // ================= 获取关注 =================
-    useEffect(() => {
-        getMyFollows().then(res => {
+    // =========================
+    // FOLLOWED TEAMS
+    // =========================
+    const refreshFollows = async () => {
+        try {
+            const res = await getMyFollows();
             const list = res.data.data || [];
             setTeams(list);
-            if (list.length > 0) setCurrentTeam(list[0]);
-        });
+
+            // 如果当前没有选中的球队，就默认选第一个已关注球队
+            if (!currentTeam && list.length > 0) {
+                setCurrentTeam(list[0]);
+            }
+        } catch (err) {
+            console.error("load follows failed", err);
+        }
+    };
+
+    useEffect(() => {
+        refreshFollows();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // ================= 获取球队 =================
+    // =========================
+    // TEAM DETAIL
+    // =========================
     useEffect(() => {
         if (!currentTeam) return;
 
@@ -59,54 +83,66 @@ export default function TeamPage() {
                 setTeamDetail(data.team);
                 setFixtures(data.fixtures || []);
                 setSquad(data.squad || []);
-            });
-
+                setMatchPage(1);
+            })
+            .catch(err => console.error("load team detail failed", err));
     }, [currentTeam, season]);
 
-    // ================= 获取新闻 =================
+    // =========================
+    // NEWS
+    // =========================
     useEffect(() => {
         if (!currentTeam) return;
 
         getNewsByTeam(currentTeam.id)
-            .then(res => setNews(res.data.data || []));
-
+            .then(res => setNews(res.data.data || []))
+            .catch(err => console.error("load team news failed", err));
     }, [currentTeam]);
 
-    // ⭐ 切换 tab / 球队 重置分页
-    useEffect(() => {
-        setPage(1);
-    }, [tab, currentTeam]);
+    // =========================
+    // FOLLOW STATUS / TOGGLE
+    // =========================
+    const isFollowed = useMemo(() => {
+        if (!currentTeam) return false;
+        return teams.some(t => t.id === currentTeam.id);
+    }, [teams, currentTeam]);
 
-    // ================= Follow 逻辑 =================
-    const isFollowed = teams.some(t => t.id === currentTeam?.id);
-
-    const handleFollow = () => {
+    const handleToggleFollow = async () => {
         if (!currentTeam) return;
 
-        if (isFollowed) {
-            // 取消关注
-            setTeams(prev => prev.filter(t => t.id !== currentTeam.id));
-        } else {
-            // 添加关注
-            setTeams(prev => [...prev, currentTeam]);
+        try {
+            if (isFollowed) {
+                await unfollowTeam(currentTeam.id);
+            } else {
+                await followTeam(currentTeam.id);
+            }
+
+            await refreshFollows();
+        } catch (err) {
+            console.error("toggle follow failed", err);
         }
     };
 
-    // ================= stats =================
-    const stats = (() => {
-        const played = fixtures.filter(f => f.status === "FT");
+    // =========================
+    // OVERVIEW STATS（关键修正）
+    // 用 fixtures 自己算，不再读不存在的 teamDetail.statistics
+    // =========================
+    const overviewStats = useMemo(() => {
+        const playedMatches = fixtures.filter(f => f.status === "FT");
 
-        let wins = 0, draws = 0, losses = 0;
-        let gf = 0, ga = 0;
+        let wins = 0;
+        let draws = 0;
+        let losses = 0;
+        let gf = 0;
+        let ga = 0;
 
-        played.forEach(f => {
+        playedMatches.forEach(f => {
             const isHome = f.homeTeamId === currentTeam?.id;
+            const myScore = isHome ? (f.homeScore ?? 0) : (f.awayScore ?? 0);
+            const oppScore = isHome ? (f.awayScore ?? 0) : (f.homeScore ?? 0);
 
-            const myScore = isHome ? f.homeScore : f.awayScore;
-            const oppScore = isHome ? f.awayScore : f.homeScore;
-
-            gf += myScore || 0;
-            ga += oppScore || 0;
+            gf += myScore;
+            ga += oppScore;
 
             if (myScore > oppScore) wins++;
             else if (myScore === oppScore) draws++;
@@ -114,34 +150,66 @@ export default function TeamPage() {
         });
 
         return {
-            played: played.length,
+            played: playedMatches.length,
             wins,
             draws,
             losses,
             gf,
-            ga,
-            winRate: played.length ? Math.round((wins / played.length) * 100) : 0
+            ga
         };
-    })();
+    }, [fixtures, currentTeam]);
 
-    // ================= 分页 =================
+    // =========================
+    // PLAYER GROUPING
+    // =========================
+    const groupPlayers = (players) => {
+        const groups = {
+            Goalkeeper: [],
+            Defender: [],
+            Midfielder: [],
+            Attacker: []
+        };
+
+        players.forEach(p => {
+            if (groups[p.position]) {
+                groups[p.position].push(p);
+            }
+        });
+
+        Object.keys(groups).forEach(key => {
+            groups[key].sort(
+                (a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0)
+            );
+        });
+
+        return groups;
+    };
+
+    const grouped = groupPlayers(squad);
+
+    const topPlayers = [...squad]
+        .sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0))
+        .slice(0, 5);
+
+    // =========================
+    // MATCH PAGINATION
+    // =========================
     const paginatedMatches = fixtures.slice(
-        (page - 1) * pageSize,
-        page * pageSize
+        (matchPage - 1) * matchPageSize,
+        matchPage * matchPageSize
     );
 
-    const totalPages = Math.ceil(fixtures.length / pageSize);
+    const totalMatchPages = Math.ceil(fixtures.length / matchPageSize);
 
     if (!teamDetail) return <div>Loading...</div>;
 
     return (
         <Box sx={{ px: 4, py: 3 }}>
-
-            {/* HERO + FOLLOW */}
+            {/* HERO */}
             <TeamHero
                 team={teamDetail}
                 isFollowed={isFollowed}
-                onFollow={handleFollow}
+                onFollow={handleToggleFollow}
             />
 
             {/* FOLLOW BAR */}
@@ -152,7 +220,7 @@ export default function TeamPage() {
                 onAdd={() => setOpenDrawer(true)}
             />
 
-            {/* TABS + SEASON */}
+            {/* TABS */}
             <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
                 <NavTabs tabs={TABS} value={tab} onChange={setTab} />
 
@@ -160,7 +228,9 @@ export default function TeamPage() {
                     <Select
                         size="small"
                         value={season}
-                        onChange={(e) => setSearchParams({ season: e.target.value })}
+                        onChange={(e) =>
+                            setSearchParams({ season: e.target.value })
+                        }
                     >
                         {[2025, 2024, 2023].map(y => (
                             <MenuItem key={y} value={y}>{y}</MenuItem>
@@ -169,110 +239,151 @@ export default function TeamPage() {
                 </Box>
             </Box>
 
-            {/* ================= OVERVIEW ================= */}
+            {/* ========================= */}
+            {/* OVERVIEW */}
+            {/* ========================= */}
             {tab === 0 && (
                 <SectionCard>
-                    <OverviewCard stats={stats} />
+                    <Box
+                        sx={{
+                            display: "grid",
+                            gridTemplateColumns: { xs: "1fr", md: "1fr 2.5fr" },
+                            gap: 3,
+                            alignItems: "stretch"
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "center",
+                                p: 3,
+                                borderRadius: 3,
+                                background: "#f9fafb"
+                            }}
+                        >
+                            <Typography fontWeight={700} fontSize={18} mb={2}>
+                                Club Info
+                            </Typography>
+
+                            <Typography fontSize={16} fontWeight={600}>
+                                Founded: {teamDetail.founded}
+                            </Typography>
+
+                            <Typography fontSize={14} color="text.secondary" mt={1}>
+                                Stadium: {teamDetail.venueName}
+                            </Typography>
+
+                            <Typography fontSize={14} color="text.secondary" mt={0.5}>
+                                City: {teamDetail.venueCity}
+                            </Typography>
+
+                            <Typography fontSize={14} color="text.secondary" mt={0.5}>
+                                Capacity: {teamDetail.venueCapacity}
+                            </Typography>
+                        </Box>
+                        <OverviewCard stats={overviewStats} />
+                    </Box>
                 </SectionCard>
             )}
 
-            {/* ================= NEWS ================= */}
+            {/* ========================= */}
+            {/* NEWS */}
+            {/* ========================= */}
             {tab === 1 && (
                 <SectionCard>
-
-                    {news[0] && (
-                        <Box sx={{
-                            mb: 3,
-                            borderRadius: 3,
-                            overflow: "hidden",
-                            height: 260,
-                            position: "relative"
-                        }}>
-                            <img
-                                src={news[0].cover}
-                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                            />
-
-                            <Box sx={{
-                                position: "absolute",
-                                bottom: 0,
-                                p: 2,
-                                width: "100%",
-                                background: "linear-gradient(transparent, rgba(0,0,0,0.8))",
-                                color: "#fff",
-                                fontWeight: 600
-                            }}>
-                                {news[0].title}
-                            </Box>
-                        </Box>
-                    )}
-
                     <Box sx={{
                         display: "grid",
                         gridTemplateColumns: "repeat(auto-fill,minmax(250px,1fr))",
                         gap: 2
                     }}>
-                        {news.slice(1).map(n => (
+                        {news.map(n => (
                             <NewsCard key={n.id} item={n} />
                         ))}
                     </Box>
-
                 </SectionCard>
             )}
 
-            {/* ================= PLAYERS ================= */}
+            {/* ========================= */}
+            {/* PLAYERS */}
+            {/* ========================= */}
             {tab === 2 && (
                 <SectionCard>
-                    <Box sx={{ display: "grid", gap: 2 }}>
-                        {squad.map(p => (
-                            <PlayerCard key={p.id} player={p} />
-                        ))}
+                    <Box sx={{ mb: 3 }}>
+                        <Typography fontWeight={700} mb={1}>
+                            🔥 Top Players
+                        </Typography>
+
+                        <Box sx={{ display: "flex", gap: 1, overflowX: "auto" }}>
+                            {topPlayers.map(p => (
+                                <Box
+                                    key={p.id}
+                                    sx={{
+                                        minWidth: 120,
+                                        p: 1.5,
+                                        borderRadius: "12px",
+                                        background: "#fff",
+                                        textAlign: "center",
+                                        boxShadow: "0 2px 8px rgba(0,0,0,0.05)"
+                                    }}
+                                >
+                                    <Avatar
+                                        src={p.photo}
+                                        sx={{ width: 48, height: 48, mx: "auto", mb: 1 }}
+                                    />
+                                    <Typography fontSize={13} fontWeight={600}>
+                                        {p.name}
+                                    </Typography>
+                                    <Typography fontSize={12} color="gray">
+                                        ⭐ {p.rating}
+                                    </Typography>
+                                </Box>
+                            ))}
+                        </Box>
                     </Box>
+
+                    {[
+                        ["Goalkeepers", grouped.Goalkeeper, <ShieldIcon />],
+                        ["Defenders", grouped.Defender, <SecurityIcon />],
+                        ["Midfielders", grouped.Midfielder, <HubIcon />],
+                        ["Attackers", grouped.Attacker, <SportsSoccerIcon />]
+                    ].map(([title, players, icon]) => (
+                        <Box key={title} sx={{ mb: 3 }}>
+                            <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                                {icon}
+                                <Typography ml={1} fontWeight={700}>
+                                    {title}
+                                </Typography>
+                            </Box>
+
+                            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                                {players.map(p => (
+                                    <PlayerCard key={p.id} player={p} />
+                                ))}
+                            </Box>
+                        </Box>
+                    ))}
                 </SectionCard>
             )}
 
-            {/* ================= MATCHES ================= */}
+            {/* ========================= */}
+            {/* MATCHES */}
+            {/* ========================= */}
             {tab === 3 && (
                 <SectionCard>
-
                     <Box sx={{ display: "grid", gap: 2 }}>
                         {paginatedMatches.map(f => (
                             <MatchCard key={f.id} match={f} />
                         ))}
                     </Box>
 
-                    <Box sx={{
-                        mt: 3,
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: 1
-                    }}>
-                        {Array.from({ length: totalPages }).map((_, i) => (
-                            <Box
-                                key={i}
-                                onClick={() => setPage(i + 1)}
-                                sx={{
-                                    width: 32,
-                                    height: 32,
-                                    borderRadius: 2,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    cursor: "pointer",
-                                    fontSize: 14,
-                                    fontWeight: 600,
-                                    background: page === i + 1 ? "#b2ff59" : "#f5f5f5",
-                                    transition: "0.2s",
-                                    "&:hover": {
-                                        background: "#dcedc8"
-                                    }
-                                }}
-                            >
-                                {i + 1}
-                            </Box>
-                        ))}
+                    <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+                        <Pagination
+                            count={totalMatchPages}
+                            page={matchPage}
+                            onChange={(e, value) => setMatchPage(value)}
+                        />
                     </Box>
-
                 </SectionCard>
             )}
 
@@ -280,9 +391,11 @@ export default function TeamPage() {
             <TeamSelectorDrawer
                 open={openDrawer}
                 onClose={() => setOpenDrawer(false)}
-                onSelect={setCurrentTeam}
+                onSelect={(team) => {
+                    setCurrentTeam(team);
+                    setOpenDrawer(false);
+                }}
             />
-
         </Box>
     );
 }
