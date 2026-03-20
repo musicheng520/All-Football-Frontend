@@ -1,7 +1,19 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 
-import { Tabs, Tab, Select, MenuItem } from "@mui/material";
+import {
+    Tabs,
+    Tab,
+    Select,
+    MenuItem,
+    Box,
+    Card,
+    CardContent,
+    Typography,
+    Avatar
+} from "@mui/material";
+
+import { motion } from "framer-motion";
 
 import { getPlayerDetail } from "../api/players";
 import { getNewsByPlayer } from "../api/news";
@@ -20,15 +32,15 @@ function PlayerDetail() {
     const [statistics, setStatistics] = useState(null);
 
     const [news, setNews] = useState([]);
-
     const [tab, setTab] = useState(0);
 
-
-
+    // =========================
+    // DATA
+    // =========================
     useEffect(() => {
 
         getPlayerDetail(id, season)
-            .then((res) => {
+            .then(res => {
 
                 const data = res.data.data;
 
@@ -36,313 +48,212 @@ function PlayerDetail() {
                 setTeam(data.team);
                 setStatistics(data.statistics?.[0] || null);
 
-            })
-            .catch((err) => {
-                console.error(err);
             });
 
     }, [id, season]);
 
-
-
     useEffect(() => {
 
         getNewsByPlayer(id)
-            .then((res) => {
-
-                setNews(res.data.data || []);
-
-            })
-            .catch((err) => {
-                console.error(err);
-            });
+            .then(res => setNews(res.data.data || []));
 
     }, [id]);
-
-
 
     const handleSeasonChange = (value) => {
 
         setSeason(value);
-
-        setSearchParams({
-            season: value
-        });
+        setSearchParams({ season: value });
 
     };
 
+    if (!player) return <div>Loading...</div>;
 
+    // =========================
+    // STAT BAR（你要的动画）
+    // =========================
+    const StatBar = ({ label, value, max = 20 }) => {
 
-    if (!player) {
-        return <div>Loading...</div>;
-    }
+        const percent = Math.min((value / max) * 100, 100);
 
+        return (
+            <Box sx={{ mb: 2 }}>
+                <Typography fontSize={13} sx={{ mb: 0.5 }}>
+                    {label} ({value})
+                </Typography>
 
+                <Box sx={{
+                    height: 8,
+                    borderRadius: 999,
+                    background: "#eee",
+                    overflow: "hidden"
+                }}>
+                    <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${percent}%` }}
+                        transition={{ duration: 0.8 }}
+                        style={{
+                            height: "100%",
+                            background: "linear-gradient(90deg,#1976d2,#42a5f5)"
+                        }}
+                    />
+                </Box>
+            </Box>
+        );
+    };
 
     return (
 
-        <div style={{ padding: 20 }}>
+        <Box sx={{ p: 3, maxWidth: 1000, mx: "auto" }}>
 
+            {/* ========================= */}
+            {/* HERO */}
+            {/* ========================= */}
+            <Card sx={{ borderRadius: 4, mb: 3, boxShadow: "0 10px 28px rgba(0,0,0,0.08)" }}>
+                <CardContent sx={{ display: "flex", alignItems: "center", gap: 3 }}>
 
-            {/* Header */}
+                    <Avatar
+                        src={player.photo}
+                        sx={{ width: 90, height: 90 }}
+                    />
 
-            <div
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 20
-                }}
-            >
+                    <Box>
+                        <Typography variant="h4" fontWeight={700}>
+                            {player.name}
+                        </Typography>
 
-                <img
-                    src={player.photo}
-                    width="100"
-                />
+                        <Typography color="text.secondary">
+                            Age {player.age}
+                        </Typography>
 
-                <div>
+                        {team && (
+                            <Link
+                                to={`/teams/${team.id}`}
+                                style={{ textDecoration: "none" }}
+                            >
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}>
+                                    <img src={team.logo} width="20" />
+                                    <Typography>{team.name}</Typography>
+                                </Box>
+                            </Link>
+                        )}
+                    </Box>
 
-                    <h1 style={{ margin: 0 }}>
-                        {player.name}
-                    </h1>
-
-                    <div style={{ color: "#666" }}>
-                        Age: {player.age}
-                    </div>
-
-                    {team && (
-
-                        <Link
-                            to={`/teams/${team.id}`}
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 6,
-                                textDecoration: "none",
-                                color: "inherit"
-                            }}
+                    {/* season */}
+                    <Box sx={{ ml: "auto" }}>
+                        <Select
+                            size="small"
+                            value={season}
+                            onChange={(e) => handleSeasonChange(e.target.value)}
                         >
+                            {[2025, 2024, 2023, 2022].map(y => (
+                                <MenuItem key={y} value={y}>{y}</MenuItem>
+                            ))}
+                        </Select>
+                    </Box>
 
-                            <img src={team.logo} width="20"/>
+                </CardContent>
+            </Card>
 
-                            {team.name}
+            {/* ========================= */}
+            {/* TABS */}
+            {/* ========================= */}
+            <Tabs value={tab} onChange={(e, v) => setTab(v)} centered>
+                <Tab label="Overview" />
+                <Tab label="Stats" />
+                <Tab label="News" />
+            </Tabs>
 
-                        </Link>
-
-                    )}
-
-                </div>
-
-
-                {/* Season Switch */}
-
-                <div style={{ marginLeft: "auto" }}>
-
-                    <Select
-                        size="small"
-                        value={season}
-                        onChange={(e) => handleSeasonChange(e.target.value)}
-                    >
-
-                        <MenuItem value={2025}>2025</MenuItem>
-                        <MenuItem value={2024}>2024</MenuItem>
-                        <MenuItem value={2023}>2023</MenuItem>
-                        <MenuItem value={2022}>2022</MenuItem>
-
-                    </Select>
-
-                </div>
-
-            </div>
-
-
-
-            {/* Tabs */}
-
-            <div style={{ marginTop: 30 }}>
-
-                <Tabs
-                    value={tab}
-                    onChange={(e, v) => setTab(v)}
-                >
-
-                    <Tab label="Overview"/>
-                    <Tab label="Stats"/>
-                    <Tab label="News"/>
-                    <Tab label="Transfers"/>
-
-                </Tabs>
-
-            </div>
-
-
-
-            {/* Overview */}
-
+            {/* ========================= */}
+            {/* OVERVIEW */}
+            {/* ========================= */}
             {tab === 0 && (
 
-                <div style={{ marginTop: 20 }}>
+                <Card sx={{ mt: 3, borderRadius: 4 }}>
+                    <CardContent>
 
-                    <h3>Player Info</h3>
+                        <Typography fontWeight={700} mb={2}>
+                            Player Info
+                        </Typography>
 
-                    <p>Name: {player.name}</p>
+                        <Typography>Nationality: {player.nationality || "Unknown"}</Typography>
+                        <Typography>Height: {player.height || "-"}</Typography>
+                        <Typography>Weight: {player.weight || "-"}</Typography>
 
-                    <p>Age: {player.age}</p>
-
-                    {player.height && (
-                        <p>Height: {player.height}</p>
-                    )}
-
-                    {player.weight && (
-                        <p>Weight: {player.weight}</p>
-                    )}
-
-                    {player.nationality && (
-                        <p>Nationality: {player.nationality}</p>
-                    )}
-
-                    {player.birthDate && (
-                        <p>Birth Date: {player.birthDate}</p>
-                    )}
-
-                </div>
+                    </CardContent>
+                </Card>
 
             )}
 
-
-
-            {/* Stats */}
-
+            {/* ========================= */}
+            {/* STATS（核心） */}
+            {/* ========================= */}
             {tab === 1 && (
 
-                <div style={{ marginTop: 20 }}>
+                <Card sx={{ mt: 3, borderRadius: 4 }}>
+                    <CardContent>
 
-                    <h3>Season Statistics</h3>
+                        <Typography fontWeight={700} mb={2}>
+                            Season Performance
+                        </Typography>
 
-                    {!statistics && (
-                        <p>No statistics available.</p>
-                    )}
+                        {!statistics && <Typography>No data</Typography>}
 
-                    {statistics && (
+                        {statistics && (
+                            <>
+                                <StatBar label="Goals" value={statistics.goals} max={15} />
+                                <StatBar label="Assists" value={statistics.assists} max={15} />
+                                <StatBar label="Appearances" value={statistics.appearances} max={38} />
 
-                        <table
-                            style={{
-                                borderCollapse: "collapse",
-                                width: "100%",
-                                maxWidth: 500
-                            }}
-                        >
+                                <StatBar label="Rating" value={parseFloat(statistics.rating)} max={10} />
+                            </>
+                        )}
 
-                            <tbody>
-
-                            <tr>
-                                <td>Appearances</td>
-                                <td>{statistics.appearances}</td>
-                            </tr>
-
-                            <tr>
-                                <td>Goals</td>
-                                <td>{statistics.goals}</td>
-                            </tr>
-
-                            <tr>
-                                <td>Assists</td>
-                                <td>{statistics.assists}</td>
-                            </tr>
-
-                            <tr>
-                                <td>Yellow Cards</td>
-                                <td>{statistics.yellowCards}</td>
-                            </tr>
-
-                            <tr>
-                                <td>Red Cards</td>
-                                <td>{statistics.redCards}</td>
-                            </tr>
-
-                            <tr>
-                                <td>Rating</td>
-                                <td>{statistics.rating}</td>
-                            </tr>
-
-                            </tbody>
-
-                        </table>
-
-                    )}
-
-                </div>
+                    </CardContent>
+                </Card>
 
             )}
 
-
-
-            {/* News */}
-
+            {/* ========================= */}
+            {/* NEWS */}
+            {/* ========================= */}
             {tab === 2 && (
 
-                <div style={{ marginTop: 20 }}>
+                <Box sx={{ mt: 3, display: "grid", gap: 2 }}>
 
-                    <h3>Player News</h3>
+                    {news.length === 0 && <Typography>No news</Typography>}
 
-                    {news.length === 0 && (
-                        <p>No news available.</p>
-                    )}
+                    {news.map(n => (
 
-                    {news.map((n) => (
-
-                        <div
+                        <motion.div
                             key={n.id}
-                            style={{
-                                borderBottom: "1px solid #eee",
-                                padding: "12px 0"
-                            }}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
                         >
+                            <Card sx={{ borderRadius: 3 }}>
+                                <CardContent>
 
-                            <Link
-                                to={`/news/${n.id}`}
-                                style={{
-                                    fontWeight: "bold",
-                                    textDecoration: "none"
-                                }}
-                            >
-                                {n.title}
-                            </Link>
+                                    <Link to={`/news/${n.id}`} style={{ textDecoration: "none" }}>
+                                        <Typography fontWeight={600}>
+                                            {n.title}
+                                        </Typography>
+                                    </Link>
 
-                            <div style={{ fontSize: 13, color: "#666" }}>
-                                {n.createdAt?.slice(0, 10)}
-                            </div>
+                                    <Typography fontSize={12} color="text.secondary">
+                                        {n.createdAt?.slice(0, 10)}
+                                    </Typography>
 
-                        </div>
+                                </CardContent>
+                            </Card>
+                        </motion.div>
 
                     ))}
 
-                </div>
+                </Box>
 
             )}
 
-
-
-            {/* Transfers / Injuries */}
-
-            {tab === 3 && (
-
-                <div style={{ marginTop: 20 }}>
-
-                    <h3>Transfers / Injuries</h3>
-
-                    <p>
-                        Player transfer history and injury records
-                        will be available soon.
-                    </p>
-
-                </div>
-
-            )}
-
-        </div>
-
+        </Box>
     );
-
 }
 
 export default PlayerDetail;
