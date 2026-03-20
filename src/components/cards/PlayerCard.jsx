@@ -12,23 +12,23 @@ export default function PlayerCard({ player }) {
             sx={{
                 textDecoration: "none",
                 color: "inherit",
-                "&:visited": { color: "inherit" },
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                p: 1.5,
-                borderRadius: "14px",
+                p: 2,
+                borderRadius: 4,
                 background: "#fff",
-                boxShadow: "0 3px 10px rgba(0,0,0,0.06)",
-                cursor: "pointer",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                transition: "0.25s",
+
                 "&:hover": {
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 6px 18px rgba(0,0,0,0.1)"
+                    transform: "translateY(-3px)",
+                    boxShadow: "0 12px 28px rgba(0,0,0,0.12)"
                 }
             }}
         >
 
-            {/* 左侧 */}
+            {/* LEFT */}
             <Box sx={{ display: "flex", alignItems: "center" }}>
                 <Avatar src={player.photo} sx={{ width: 44, height: 44 }} />
 
@@ -43,7 +43,7 @@ export default function PlayerCard({ player }) {
                 </Box>
             </Box>
 
-            {/* 右侧 */}
+            {/* RIGHT */}
             <Box sx={{ display: "flex", gap: 1 }}>
                 <Chip label={`⚽ ${player.goals || 0}`} size="small" />
                 <Chip label={`🎯 ${player.assists || 0}`} size="small" />

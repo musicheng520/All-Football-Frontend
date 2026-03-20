@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 
 import PlayerCard from "../components/cards/PlayerCard";
-import TeamCard from "../components/TeamCard";
+import TeamCard from "../components/cards/TeamCard.jsx";
 
 function SearchResults() {
 

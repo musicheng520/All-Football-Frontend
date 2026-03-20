@@ -1,22 +1,38 @@
 import { Box, Typography } from "@mui/material";
+import { Link } from "react-router-dom";
 
 export default function NewsCard({ item }) {
 
     return (
-        <Box sx={{
-            borderRadius: 2,
-            overflow: "hidden",
-            cursor: "pointer",
-            transition: "0.2s",
-            "&:hover": {
-                transform: "translateY(-4px)",
-                boxShadow: "0 10px 20px rgba(0,0,0,0.1)"
-            }
-        }}>
-            <img src={item.cover} style={{ width: "100%", height: 150, objectFit: "cover" }} />
+        <Box
+            component={Link}
+            to={`/news/${item.id}`}
+            sx={{
+                textDecoration: "none",
+                color: "inherit",
+                borderRadius: 4,
+                overflow: "hidden",
+                background: "#fff",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                transition: "0.25s",
 
-            <Box sx={{ p: 1 }}>
-                <Typography fontWeight={600}>
+                "&:hover": {
+                    transform: "translateY(-4px)",
+                    boxShadow: "0 12px 28px rgba(0,0,0,0.12)"
+                }
+            }}
+        >
+            <img
+                src={item.cover}
+                style={{
+                    width: "100%",
+                    height: 150,
+                    objectFit: "cover"
+                }}
+            />
+
+            <Box sx={{ p: 1.5 }}>
+                <Typography fontWeight={700} fontSize={14}>
                     {item.title}
                 </Typography>
             </Box>

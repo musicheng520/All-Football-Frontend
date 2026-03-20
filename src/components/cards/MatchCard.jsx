@@ -21,55 +21,44 @@ export default function MatchCard({ match }) {
         return `${m}/${d} ${h}:${min.toString().padStart(2, "0")}`;
     };
 
-    return (
-        <Link
-            to={`/matches/${id}`}   // 🔥 保持你原来的路由
-            style={{ textDecoration: "none" }}
-        >
-            <Box
-                sx={{
-                    p: 2,
-                    borderRadius: 3,
-                    background: "#fff",
-                    boxShadow: "0 6px 18px rgba(0,0,0,0.05)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    cursor: "pointer",
-                    transition: "0.2s",
+    const isLive = ["LIVE", "1H", "2H", "HT"].includes(status);
 
-                    "&:hover": {
-                        transform: "translateY(-3px)",
-                        boxShadow: "0 10px 25px rgba(0,0,0,0.1)"
-                    }
-                }}
-            >
+    return (
+        <Link to={`/matches/${id}`} style={{ textDecoration: "none" }}>
+            <Box sx={{
+                p: 2,
+                borderRadius: 4,
+                background: "#fff",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                transition: "0.25s",
+
+                "&:hover": {
+                    transform: "translateY(-4px)",
+                    boxShadow: "0 12px 28px rgba(0,0,0,0.12)"
+                }
+            }}>
 
                 {/* HOME */}
-                <Box sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    width: 140
-                }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: 150 }}>
                     <img src={homeTeamLogo} style={{ width: 28 }} />
-                    <Typography fontWeight={600} fontSize={14}>
-                        {homeTeamName}
-                    </Typography>
+                    <Typography fontWeight={600}>{homeTeamName}</Typography>
                 </Box>
 
                 {/* CENTER */}
-                <Box sx={{
-                    textAlign: "center",
-                    minWidth: 120
-                }}>
-                    <Typography fontWeight={700} fontSize={16}>
+                <Box sx={{ textAlign: "center" }}>
+                    <Typography fontWeight={800} fontSize={18}>
                         {status === "FT"
                             ? `${homeScore} - ${awayScore}`
                             : "vs"}
                     </Typography>
 
-                    <Typography fontSize={12} color="gray">
+                    <Typography
+                        fontSize={12}
+                        color={isLive ? "#d32f2f" : "gray"}
+                    >
                         {status === "NS" ? formatTime() : status}
                     </Typography>
                 </Box>
@@ -80,11 +69,9 @@ export default function MatchCard({ match }) {
                     alignItems: "center",
                     gap: 1,
                     justifyContent: "flex-end",
-                    width: 140
+                    width: 150
                 }}>
-                    <Typography fontWeight={600} fontSize={14}>
-                        {awayTeamName}
-                    </Typography>
+                    <Typography fontWeight={600}>{awayTeamName}</Typography>
                     <img src={awayTeamLogo} style={{ width: 28 }} />
                 </Box>
 

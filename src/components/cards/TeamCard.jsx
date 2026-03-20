@@ -1,7 +1,7 @@
 import { Card, CardContent, Typography, Box } from "@mui/material";
 import { Link } from "react-router-dom";
 
-function TeamCard({ team }) {
+export default function TeamCard({ team }) {
 
     return (
         <Card
@@ -9,49 +9,41 @@ function TeamCard({ team }) {
             to={`/teams/${team.id}`}
             sx={{
                 textDecoration: "none",
-                borderRadius: 3,
+                borderRadius: 4,
                 height: "100%",
-                transition: "all 0.2s",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                transition: "0.25s",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+
                 "&:hover": {
                     transform: "translateY(-4px)",
-                    boxShadow: "0 10px 24px rgba(0,0,0,0.15)"
+                    boxShadow: "0 12px 28px rgba(0,0,0,0.12)"
                 }
             }}
         >
-            <CardContent
-                sx={{
-                    textAlign: "center",
-                    width: "100%"
-                }}
-            >
+            <CardContent sx={{ textAlign: "center", width: "100%" }}>
 
-                {/* 🟢 LOGO（关键修复） */}
-                <Box
-                    sx={{
-                        width: 64,
-                        height: 64,
-                        mx: "auto",
-                        mb: 1.5,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center"
-                    }}
-                >
+                <Box sx={{
+                    width: 64,
+                    height: 64,
+                    mx: "auto",
+                    mb: 1.5,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                }}>
                     <img
                         src={team.logo}
-                        alt={team.name}
                         style={{
                             width: "100%",
                             height: "100%",
-                            objectFit: "contain"   // ⭐关键
+                            objectFit: "contain"
                         }}
                     />
                 </Box>
 
-                {/* NAME */}
                 <Typography fontWeight={600}>
                     {team.name}
                 </Typography>
@@ -64,5 +56,3 @@ function TeamCard({ team }) {
         </Card>
     );
 }
-
-export default TeamCard;

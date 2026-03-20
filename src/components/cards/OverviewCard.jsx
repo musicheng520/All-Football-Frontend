@@ -17,11 +17,6 @@ export default function OverviewCard({ stats = {} }) {
     const ga = stats.ga || 0;
 
     const winRate = played ? Math.round((wins / played) * 100) : 0;
-    const goalDiff = gf - ga;
-
-    let formText = "Balanced";
-    if (winRate > 60) formText = "Strong";
-    else if (winRate < 40) formText = "Weak";
 
     const Item = ({ label, value, icon, highlight }) => (
         <Box sx={{
@@ -31,7 +26,7 @@ export default function OverviewCard({ stats = {} }) {
             background: highlight ? "#1976d2" : "#f5f5f5",
             color: highlight ? "#fff" : "inherit"
         }}>
-            <Box sx={{ mb: 0.5 }}>{icon}</Box>
+            <Box mb={0.5}>{icon}</Box>
 
             <Typography fontSize={18} fontWeight={700}>
                 {value}
@@ -44,7 +39,10 @@ export default function OverviewCard({ stats = {} }) {
     );
 
     return (
-        <Card sx={{ borderRadius: 4 }}>
+        <Card sx={{
+            borderRadius: 4,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.08)"
+        }}>
             <CardContent>
 
                 <Typography fontWeight={700} mb={2}>
@@ -70,16 +68,6 @@ export default function OverviewCard({ stats = {} }) {
                         highlight
                     />
 
-                </Box>
-
-                <Box mt={3}>
-                    <Typography fontSize={13} color="text.secondary">
-                        Form: <b>{formText}</b>
-                    </Typography>
-
-                    <Typography fontSize={13} color="text.secondary">
-                        Goal Difference: <b>{goalDiff}</b>
-                    </Typography>
                 </Box>
 
             </CardContent>
