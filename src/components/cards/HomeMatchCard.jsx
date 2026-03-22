@@ -38,7 +38,6 @@ export default function HomeMatchCard({ match }) {
                 boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
                 transition: "0.25s",
 
                 "&:hover": {
@@ -47,16 +46,32 @@ export default function HomeMatchCard({ match }) {
                 }
             }}>
 
-                {/* HOME */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <img src={home?.logo} width="22" />
-                    <Typography fontWeight={600} fontSize={13}>
+                {/* LEFT */}
+                <Box sx={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    minWidth: 0
+                }}>
+                    <img src={home?.logo} style={{ width: 22, height: 22 }} />
+
+                    <Typography
+                        fontWeight={600}
+                        fontSize={13}
+                        noWrap
+                        sx={{ overflow: "hidden", textOverflow: "ellipsis" }}
+                    >
                         {home?.name}
                     </Typography>
                 </Box>
 
-                {/* SCORE */}
-                <Box sx={{ textAlign: "center" }}>
+                {/* CENTER */}
+                <Box sx={{
+                    width: 70,
+                    textAlign: "center",
+                    flexShrink: 0
+                }}>
                     <Typography fontWeight={700} fontSize={14}>
                         {homeScore ?? "-"} : {awayScore ?? "-"}
                     </Typography>
@@ -69,16 +84,25 @@ export default function HomeMatchCard({ match }) {
                     </Typography>
                 </Box>
 
-                {/* AWAY */}
+                {/* RIGHT */}
                 <Box sx={{
+                    flex: 1,
                     display: "flex",
                     alignItems: "center",
-                    gap: 1
+                    justifyContent: "flex-end",
+                    gap: 1,
+                    minWidth: 0
                 }}>
-                    <Typography fontWeight={600} fontSize={13}>
+                    <Typography
+                        fontWeight={600}
+                        fontSize={13}
+                        noWrap
+                        sx={{ overflow: "hidden", textOverflow: "ellipsis" }}
+                    >
                         {away?.name}
                     </Typography>
-                    <img src={away?.logo} width="22" />
+
+                    <img src={away?.logo} style={{ width: 22, height: 22 }} />
                 </Box>
 
             </Box>

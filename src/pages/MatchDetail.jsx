@@ -51,44 +51,55 @@ function MatchDetail() {
     useEffect(() => {
         if (!id || id === "null") return;
 
-        connectSocket(id, (wsData) => {
-            setData(prev => {
-                if (!prev) return prev;
+        const socket = new SockJS("http://localhost:8080/ws");
 
-                const oldScore = `${prev.fixture?.homeScore ?? 0}-${prev.fixture?.awayScore ?? 0}`;
-                const newScore = `${wsData.goals?.home ?? prev.fixture?.homeScore ?? 0}-${wsData.goals?.away ?? prev.fixture?.awayScore ?? 0}`;
+        const client = new Client({
+            webSocketFactory: () => socket,
+            reconnectDelay: 5000,
 
-                if (oldScore !== newScore) {
-                    setScoreFlash(true);
-                    setTimeout(() => setScoreFlash(false), 650);
-                }
+            onConnect: () => {
 
-                const nextStatistics = wsData.statistics || prev.statistics;
+                // 正确订阅（核心）
+                client.subscribe(`/topic/match/${id}`, (msg) => {
 
-                if (wsData.statistics) {
-                    setStatsAnimateKey(k => k + 1);
-                }
+                    const wsData = JSON.parse(msg.body);
 
-                return {
-                    ...prev,
-                    fixture: {
-                        ...prev.fixture,
+                    setData(prev => {
+                        if (!prev) return prev;
 
-                        // ✅ 改这里（关键）
-                        homeScore: wsData.goals?.home ?? prev.fixture.homeScore,
-                        awayScore: wsData.goals?.away ?? prev.fixture.awayScore,
+                        const oldScore = `${prev.fixture?.homeScore ?? 0}-${prev.fixture?.awayScore ?? 0}`;
+                        const newScore = `${wsData.goals?.home ?? 0}-${wsData.goals?.away ?? 0}`;
 
-                        // ✅ status 也要改
-                        status: wsData.fixture?.status?.short ?? prev.fixture.status,
-                    },
+                        if (oldScore !== newScore) {
+                            setScoreFlash(true);
+                            setTimeout(() => setScoreFlash(false), 650);
+                        }
 
-                    events: wsData.events || prev.events,
-                    statistics: nextStatistics
-                };
-            });
+                        if (wsData.statistics) {
+                            setStatsAnimateKey(k => k + 1);
+                        }
+
+                        return {
+                            ...prev,
+                            fixture: {
+                                ...prev.fixture,
+                                homeScore: wsData.goals?.home ?? prev.fixture.homeScore,
+                                awayScore: wsData.goals?.away ?? prev.fixture.awayScore,
+                                status: wsData.fixture?.status?.short ?? prev.fixture.status,
+                            },
+                            events: wsData.events || prev.events,
+                            statistics: wsData.statistics || prev.statistics
+                        };
+                    });
+
+                });
+            }
         });
 
-        return () => disconnectSocket();
+        client.activate();
+
+        return () => client.deactivate();
+
     }, [id]);
 
     // =========================
