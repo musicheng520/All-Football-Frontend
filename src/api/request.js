@@ -1,7 +1,12 @@
 import axios from "axios";
 
+const BASE_URL =
+    window.location.hostname === "localhost"
+        ? "http://localhost:8080"
+        : "https://api.sicheng55.com";
+
 const request = axios.create({
-    baseURL: "/api",
+    baseURL: BASE_URL,
     timeout: 5000,
 });
 
@@ -16,15 +21,12 @@ request.interceptors.request.use((config) => {
 });
 
 request.interceptors.response.use(
-    (response) => {
-        return response;
-    },
+    (response) => response,
     (error) => {
         if (error.response && error.response.status === 401) {
             localStorage.removeItem("token");
             window.location.href = "/login";
         }
-
         return Promise.reject(error);
     }
 );
